@@ -18,10 +18,14 @@ app = FastAPI(
     description="API with Google OAuth authentication"
 )
 
-# CORS Configuration
+# CORS Configuration - Get from environment variable
+FRONTEND_URL = os.getenv("FRONTEND_URL", "http://localhost:3000")
+# Split by comma if multiple URLs
+origins = [url.strip() for url in FRONTEND_URL.split(",")]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"],
+    allow_origins=origins,  # Use environment variable
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -37,6 +41,7 @@ async def startup():
             document_models=[User, PendingUser]  # Register both models
         )
         print("✅ Database connected successfully")
+        print(f"✅ CORS enabled for: {origins}")  # Log allowed origins
     except Exception as e:
         print(f"❌ Database connection failed: {e}")
 
