@@ -15,6 +15,13 @@ load_dotenv()
 
 router = APIRouter()
 
+# Get URLs from environment
+BACKEND_URL = os.getenv("BACKEND_URL", "http://localhost:8000")
+FRONTEND_URL = os.getenv("FRONTEND_URL", "http://localhost:3000").split(",")[0]  # Get first URL
+
+print(f"🌐 BACKEND_URL: {BACKEND_URL}")
+print(f"🌐 FRONTEND_URL: {FRONTEND_URL}")
+
 # Google OAuth
 google_oauth_client = GoogleOAuth2(
     client_id=os.getenv("GOOGLE_CLIENT_ID"),
@@ -434,7 +441,7 @@ async def login(login_data: LoginRequest):
 async def google_authorize():
     """Step 1: Redirect user to Google OAuth"""
     authorization_url = await google_oauth_client.get_authorization_url(
-        redirect_uri="http://localhost:8000/auth/google/callback",
+        redirect_uri=f"{BACKEND_URL}/auth/google/callback",
         scope=["openid", "email", "profile"],
     )
     return {"authorization_url": authorization_url}
@@ -448,7 +455,7 @@ async def google_callback(code: str):
         # Exchange code for access token
         token = await google_oauth_client.get_access_token(
             code, 
-            redirect_uri="http://localhost:8000/auth/google/callback"
+            redirect_uri=f"{BACKEND_URL}/auth/google/callback"
         )
         print(f"✅ Got access token")
         
@@ -525,14 +532,14 @@ async def google_callback(code: str):
         
         # Redirect to frontend with token
         return RedirectResponse(
-            url=f"http://localhost:3000/auth/callback?token={access_token}"
+            url=f"{FRONTEND_URL}/auth/callback?token={access_token}"
         )
         
     except Exception as e:
         print(f"❌ ERROR in callback: {str(e)}")
         traceback.print_exc()
         return RedirectResponse(
-            url=f"http://localhost:3000/auth/login?error=authentication_failed"
+            url=f"{FRONTEND_URL}/auth/login?error=authentication_failed"
         )
     
 @router.get("/me")
